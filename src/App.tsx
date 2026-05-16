@@ -7,62 +7,70 @@ import {
   MonitorCheck,
   BellRing,
   Mail,
-  MessageCircle,
-  ArrowRight,
+  ArrowUpRight,
   Clock,
-  Sparkles,
+  User,
 } from 'lucide-react'
+import {
+  parseCalendlyParams,
+  formatDateNL,
+  formatTimeNL,
+  durationMinutes,
+  initialsFromName,
+  type CalendlyBooking,
+} from './lib/calendly'
 
 type Step = {
   icon: typeof Calendar
   title: string
   body: string
-  cta?: { label: string; href: string }
 }
 
 const STEPS: Step[] = [
   {
     icon: Calendar,
     title: 'Zet het gesprek in je agenda',
-    body: 'Je ontvangt zo een bevestigingsmail met een agenda-uitnodiging. Accepteer deze direct, zodat je het tijdstip niet vergeet en je agenda geblokkeerd staat.',
-    cta: { label: 'Voeg toe aan agenda', href: '#' },
+    body:
+      'Je ontvangt zo een bevestigingsmail met agenda-uitnodiging van Calendly. Accepteer deze direct, zodat je tijdslot geblokkeerd staat.',
   },
   {
     icon: ClipboardList,
     title: 'Vul het intake-formulier in',
-    body: 'Zo kunnen we het gesprek volledig op jouw situatie afstemmen. Reken op 3 tot 5 minuten. Hoe scherper jouw antwoorden, hoe concreter onze aanpak.',
-    cta: { label: 'Start intake (3 min.)', href: '#' },
+    body:
+      'Zo kunnen we het gesprek volledig op jouw situatie afstemmen. Reken op 3 tot 5 minuten. Hoe scherper jouw antwoorden, hoe concreter onze aanpak.',
   },
   {
     icon: Video,
     title: 'Bekijk de voorbereidingsvideo',
-    body: 'In 8 minuten leggen we uit hoe wij coaches in 90 dagen naar consistente €10K+ maanden begeleiden. Bekijk deze vóór het gesprek — zo halen we samen meer uit ons uur.',
-    cta: { label: 'Bekijk video (8 min.)', href: '#' },
+    body:
+      'In 8 minuten leggen we uit hoe wij coaches naar consistente €10K+ maanden begeleiden. Bekijk deze vóór ons gesprek — zo halen we samen meer uit ons uur.',
   },
   {
     icon: MonitorCheck,
     title: 'Test je camera, microfoon en verbinding',
-    body: 'We bellen via Google Meet. Doe vooraf een korte check op een rustige plek met goede wifi. Zo voorkom je technische ruis tijdens het gesprek.',
+    body:
+      'We bellen via Google Meet. Doe vooraf een korte check op een rustige plek met goede wifi. Zo voorkom je technische ruis tijdens het gesprek.',
   },
   {
     icon: BellRing,
-    title: 'Zet je telefoon op stil',
-    body: 'Plan 60 minuten zonder afleiding. Hoe meer ruimte je geeft, hoe scherper jouw plan na afloop.',
+    title: 'Plan 60 minuten zonder afleiding',
+    body:
+      'Zet je telefoon op stil. Hoe meer ruimte je geeft, hoe scherper jouw plan na afloop is.',
   },
 ]
 
 const FAQ = [
   {
     q: 'Wat gebeurt er tijdens het gesprek?',
-    a: 'We brengen je huidige situatie in kaart, bepalen waar je vastloopt en laten zien welk pad jou in 90 dagen naar consistente €10K+ maanden brengt. Geen pitch, wel een eerlijk advies.',
+    a: 'We brengen je huidige situatie in kaart, bepalen waar je vastloopt en laten zien welk pad jou naar consistente €10K+ maanden brengt. Geen pitch, wel een eerlijk advies.',
   },
   {
     q: 'Met wie spreek ik?',
-    a: 'Je spreekt met een van onze strategen. Zij hebben zelf gecoached op €30K+ p/m niveau en weten precies waar coaches in jouw fase op vastlopen.',
+    a: 'Je spreekt met één van onze strategen. Zij weten precies waar coaches in jouw fase op vastlopen. Hierboven zie je met wie jij specifiek bent ingepland.',
   },
   {
     q: 'Kan ik het gesprek verzetten?',
-    a: 'Zeker. Gebruik de "Verzet het gesprek" link onderaan deze pagina of in je bevestigingsmail. Doe dit minimaal 12 uur van tevoren.',
+    a: 'Zeker. Gebruik de "Verzet gesprek" link onderaan deze pagina of in je bevestigingsmail. Doe dit minimaal 12 uur van tevoren.',
   },
   {
     q: 'Wat als ik niet kom opdagen?',
@@ -70,158 +78,212 @@ const FAQ = [
   },
 ]
 
-function formatDate(d: Date) {
-  return new Intl.DateTimeFormat('nl-NL', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  }).format(d)
+function BookingCard({ booking }: { booking: CalendlyBooking }) {
+  const { eventStartTime, eventEndTime, assignedTo } = booking
+  const minutes =
+    eventStartTime && eventEndTime
+      ? durationMinutes(eventStartTime, eventEndTime)
+      : undefined
+
+  return (
+    <section className="mt-12 overflow-hidden rounded-2xl border border-border bg-card">
+      <div className="flex items-center justify-between border-b border-border px-6 py-3">
+        <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
+          Jouw gesprek
+        </p>
+        <span className="flex items-center gap-1.5 text-[11px] font-medium text-[color:var(--color-success)]">
+          <span className="relative flex h-1.5 w-1.5">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[color:var(--color-success)] opacity-60" />
+            <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[color:var(--color-success)]" />
+          </span>
+          Bevestigd
+        </span>
+      </div>
+
+      <div className="grid gap-6 px-6 py-6 sm:grid-cols-2">
+        <DetailRow
+          icon={User}
+          label="Je gesprekspartner"
+          value={assignedTo ?? 'Wordt zo toegewezen'}
+          sub={assignedTo ? 'EcomPulse strateeg' : 'Calendly wijst toe op basis van beschikbaarheid'}
+          accent
+        />
+        <DetailRow
+          icon={Calendar}
+          label="Datum"
+          value={
+            eventStartTime ? capitalize(formatDateNL(eventStartTime)) : 'Volgt in bevestigingsmail'
+          }
+        />
+        <DetailRow
+          icon={Clock}
+          label="Tijdstip"
+          value={
+            eventStartTime && eventEndTime
+              ? `${formatTimeNL(eventStartTime)} – ${formatTimeNL(eventEndTime)}`
+              : 'Volgt in bevestigingsmail'
+          }
+          sub={eventStartTime ? 'Europe/Amsterdam' : undefined}
+        />
+        <DetailRow
+          icon={Video}
+          label="Waar"
+          value="Google Meet"
+          sub={
+            minutes ? `${minutes} minuten — link in de bevestigingsmail` : 'Link in de bevestigingsmail'
+          }
+        />
+      </div>
+    </section>
+  )
 }
 
-function formatTime(d: Date) {
-  return new Intl.DateTimeFormat('nl-NL', {
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(d)
+function DetailRow({
+  icon: Icon,
+  label,
+  value,
+  sub,
+  accent = false,
+}: {
+  icon: typeof Calendar
+  label: string
+  value: string
+  sub?: string
+  accent?: boolean
+}) {
+  return (
+    <div className="flex items-start gap-3">
+      <div
+        className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${
+          accent
+            ? 'bg-primary/15 text-primary'
+            : 'bg-muted text-muted-foreground'
+        }`}
+      >
+        <Icon className="h-4 w-4" />
+      </div>
+      <div className="min-w-0">
+        <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
+          {label}
+        </p>
+        <p className="mt-1 text-sm font-medium text-foreground">{value}</p>
+        {sub && <p className="mt-0.5 text-xs text-muted-foreground">{sub}</p>}
+      </div>
+    </div>
+  )
+}
+
+function capitalize(s: string) {
+  return s.charAt(0).toUpperCase() + s.slice(1)
 }
 
 function App() {
-  const meeting = useMemo(() => {
-    const start = new Date()
-    start.setDate(start.getDate() + 2)
-    start.setHours(14, 0, 0, 0)
-    const end = new Date(start)
-    end.setMinutes(end.getMinutes() + 45)
-    return { start, end }
-  }, [])
+  const booking = useMemo(
+    () => parseCalendlyParams(window.location.search),
+    [],
+  )
+
+  const firstName = booking.inviteeFirstName
 
   return (
     <div className="min-h-svh bg-background text-foreground">
       {/* Top bar */}
-      <header className="border-b border-border bg-card">
+      <header className="border-b border-border/70">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
-          <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-primary-foreground">
-              <Sparkles className="h-4 w-4" />
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary text-primary-foreground">
+              <span className="text-[11px] font-bold">E</span>
             </div>
-            <span className="text-sm font-semibold tracking-tight">EcomPulse Coaching</span>
+            <span className="text-sm font-semibold tracking-tight">EcomPulse</span>
           </div>
           <a
             href="mailto:support@ecompulse.nl"
-            className="hidden items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground sm:flex"
+            className="hidden items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground sm:flex"
           >
-            <Mail className="h-4 w-4" />
+            <Mail className="h-3.5 w-3.5" />
             support@ecompulse.nl
           </a>
         </div>
       </header>
 
-      <main className="mx-auto max-w-3xl px-6 py-12 sm:py-16">
+      <main className="mx-auto max-w-3xl px-6 pt-16 pb-20 sm:pt-24">
         {/* Hero */}
         <div className="flex flex-col items-center text-center">
-          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[color:var(--color-success)]/10 text-[color:var(--color-success)]">
-            <CheckCircle2 className="h-7 w-7" strokeWidth={2.5} />
+          <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card/60 px-3 py-1.5 backdrop-blur">
+            <span className="relative flex h-1.5 w-1.5">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[color:var(--color-success)] opacity-60" />
+              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[color:var(--color-success)]" />
+            </span>
+            <span className="text-xs font-medium text-muted-foreground">
+              Bevestigd ·{' '}
+              <span className="text-foreground/85">Gesprek staat in je agenda</span>
+            </span>
           </div>
-          <p className="mt-5 text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
-            Bevestigd
-          </p>
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">
-            Bedankt! Je strategiegesprek staat in de planning.
+
+          <h1 className="mt-7 text-4xl font-semibold leading-[1.05] tracking-tight sm:text-6xl">
+            {firstName ? `Bedankt ${firstName},` : 'Bedankt,'}
+            <br />
+            je gesprek is{' '}
+            <span className="font-serif-italic">bevestigd</span>
           </h1>
-          <p className="mt-4 max-w-xl text-base leading-relaxed text-muted-foreground">
+
+          <p className="mt-6 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
             Je hebt zojuist een belangrijke stap gezet richting consistente €10K+ maanden als coach.
             Hieronder vind je alles wat je nodig hebt om jouw gesprek tot een succes te maken.
           </p>
+
+          <div className="mt-8 flex items-center gap-3">
+            <CheckCircle2 className="h-4 w-4 text-[color:var(--color-success)]" />
+            <span className="text-sm text-muted-foreground">
+              Bevestigingsmail onderweg naar{' '}
+              <span className="text-foreground/85">
+                {booking.inviteeEmail ?? 'je inbox'}
+              </span>
+            </span>
+          </div>
         </div>
 
         {/* Booking card */}
-        <section className="mt-10 overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
-          <div className="border-b border-border bg-muted/50 px-6 py-3">
-            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              Jouw gesprek
-            </p>
-          </div>
-          <div className="grid gap-6 px-6 py-6 sm:grid-cols-2">
-            <div className="flex items-start gap-3">
-              <Calendar className="mt-0.5 h-5 w-5 text-primary" />
-              <div>
-                <p className="text-xs uppercase tracking-wider text-muted-foreground">Datum</p>
-                <p className="mt-0.5 text-sm font-medium capitalize">{formatDate(meeting.start)}</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <Clock className="mt-0.5 h-5 w-5 text-primary" />
-              <div>
-                <p className="text-xs uppercase tracking-wider text-muted-foreground">Tijdstip</p>
-                <p className="mt-0.5 text-sm font-medium">
-                  {formatTime(meeting.start)} – {formatTime(meeting.end)} (Europe/Amsterdam)
-                </p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <Video className="mt-0.5 h-5 w-5 text-primary" />
-              <div>
-                <p className="text-xs uppercase tracking-wider text-muted-foreground">Waar</p>
-                <p className="mt-0.5 text-sm font-medium">Google Meet</p>
-                <p className="text-xs text-muted-foreground">Link in de bevestigingsmail</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <Sparkles className="mt-0.5 h-5 w-5 text-primary" />
-              <div>
-                <p className="text-xs uppercase tracking-wider text-muted-foreground">Duur</p>
-                <p className="mt-0.5 text-sm font-medium">45 minuten — neem rustig de tijd</p>
-              </div>
-            </div>
-          </div>
-        </section>
+        <BookingCard booking={booking} />
 
         {/* Checklist */}
-        <section className="mt-12">
-          <div className="flex items-end justify-between">
-            <div>
-              <h2 className="text-xl font-semibold tracking-tight sm:text-2xl">
-                Doe dit nog vóór ons gesprek
-              </h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                5 korte stappen — samen ongeveer 15 minuten.
-              </p>
-            </div>
+        <section className="mt-16">
+          <div>
+            <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-primary">
+              Voorbereiding
+            </p>
+            <h2 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">
+              Doe dit nog vóór{' '}
+              <span className="font-serif-italic">ons gesprek</span>
+            </h2>
+            <p className="mt-2 text-sm text-muted-foreground">
+              5 korte stappen — samen ongeveer 15 minuten.
+            </p>
           </div>
 
-          <ol className="mt-6 space-y-3">
+          <ol className="mt-6 space-y-2.5">
             {STEPS.map((step, i) => {
               const Icon = step.icon
               return (
                 <li
                   key={step.title}
-                  className="group flex gap-4 rounded-xl border border-border bg-card p-5 transition hover:border-primary/40 hover:shadow-sm"
+                  className="group flex gap-4 rounded-xl border border-border bg-card/60 p-5 transition hover:border-primary/40 hover:bg-card"
                 >
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground transition group-hover:bg-primary/10 group-hover:text-primary">
-                    <Icon className="h-5 w-5" />
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground transition group-hover:bg-primary/15 group-hover:text-primary">
+                    <Icon className="h-4.5 w-4.5" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-baseline gap-2">
-                      <span className="text-xs font-semibold tabular-nums text-muted-foreground">
-                        Stap {i + 1}
+                      <span className="text-[11px] font-semibold tabular-nums uppercase tracking-[0.14em] text-muted-foreground">
+                        Stap {String(i + 1).padStart(2, '0')}
                       </span>
                     </div>
-                    <h3 className="mt-0.5 text-base font-semibold tracking-tight text-card-foreground">
+                    <h3 className="mt-1 text-base font-semibold tracking-tight text-foreground">
                       {step.title}
                     </h3>
                     <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
                       {step.body}
                     </p>
-                    {step.cta && (
-                      <a
-                        href={step.cta.href}
-                        className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
-                      >
-                        {step.cta.label}
-                        <ArrowRight className="h-3.5 w-3.5" />
-                      </a>
-                    )}
                   </div>
                 </li>
               )
@@ -230,15 +292,29 @@ function App() {
         </section>
 
         {/* FAQ */}
-        <section className="mt-14">
-          <h2 className="text-xl font-semibold tracking-tight sm:text-2xl">Veelgestelde vragen</h2>
-          <div className="mt-5 divide-y divide-border overflow-hidden rounded-xl border border-border bg-card">
+        <section className="mt-16">
+          <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-primary">
+            FAQ
+          </p>
+          <h2 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">
+            Veelgestelde <span className="font-serif-italic">vragen</span>
+          </h2>
+          <div className="mt-6 divide-y divide-border overflow-hidden rounded-xl border border-border bg-card/60">
             {FAQ.map((item) => (
               <details key={item.q} className="group">
-                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-5 py-4 text-sm font-medium hover:bg-muted/50">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-5 py-4 text-sm font-medium hover:bg-muted/40">
                   {item.q}
                   <span className="text-muted-foreground transition group-open:rotate-180">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
                       <polyline points="6 9 12 15 18 9" />
                     </svg>
                   </span>
@@ -251,31 +327,52 @@ function App() {
           </div>
         </section>
 
-        {/* Reschedule / contact */}
-        <section className="mt-12 rounded-2xl border border-dashed border-border bg-muted/40 p-6 text-center">
-          <p className="text-sm text-muted-foreground">Komt het tijdstip toch niet meer uit?</p>
-          <div className="mt-3 flex flex-col items-center justify-center gap-2 sm:flex-row sm:gap-4">
+        {/* Reschedule / cancel */}
+        <section className="mt-16 rounded-2xl border border-dashed border-border bg-card/40 p-6 text-center sm:p-8">
+          <p className="text-sm font-medium">Komt het tijdstip toch niet meer uit?</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Verzet of annuleer het gesprek direct via Calendly.
+          </p>
+          <div className="mt-5 flex flex-col items-center justify-center gap-2 sm:flex-row sm:gap-3">
             <a
-              href="#"
-              className="inline-flex items-center justify-center gap-1.5 rounded-md border border-border bg-card px-4 py-2 text-sm font-medium hover:border-primary/40 hover:text-primary"
+              href={booking.rescheduleUrl ?? '#'}
+              target={booking.rescheduleUrl ? '_blank' : undefined}
+              rel="noreferrer"
+              className={`inline-flex items-center justify-center gap-1.5 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:opacity-90 ${
+                !booking.rescheduleUrl ? 'pointer-events-none opacity-50' : ''
+              }`}
             >
               <Calendar className="h-4 w-4" />
-              Verzet het gesprek
+              Verzet gesprek
+              <ArrowUpRight className="h-3.5 w-3.5" />
             </a>
             <a
-              href="mailto:support@ecompulse.nl"
-              className="inline-flex items-center justify-center gap-1.5 rounded-md px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground"
+              href={booking.cancelUrl ?? '#'}
+              target={booking.cancelUrl ? '_blank' : undefined}
+              rel="noreferrer"
+              className={`inline-flex items-center justify-center gap-1.5 rounded-md border border-border bg-transparent px-4 py-2 text-sm font-medium text-muted-foreground transition hover:border-border hover:bg-muted hover:text-foreground ${
+                !booking.cancelUrl ? 'pointer-events-none opacity-50' : ''
+              }`}
             >
-              <MessageCircle className="h-4 w-4" />
-              Stel een vraag
+              Annuleer gesprek
             </a>
           </div>
+          {!booking.inviteeUuid && (
+            <p className="mt-4 text-[11px] text-muted-foreground/70">
+              Verzet/annuleer-links worden actief zodra je via Calendly op deze pagina komt.
+            </p>
+          )}
         </section>
 
-        <p className="mt-12 text-center text-xs text-muted-foreground">
-          We kijken ernaar uit je te spreken. <br className="sm:hidden" />
-          — Team EcomPulse
-        </p>
+        <footer className="mt-16 flex flex-col items-center gap-3 text-center">
+          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/15 text-primary text-xs font-semibold">
+            {initialsFromName(booking.assignedTo)}
+          </div>
+          <p className="text-sm text-muted-foreground">
+            We kijken ernaar uit je te spreken.
+          </p>
+          <p className="text-xs text-muted-foreground/70">— Team EcomPulse</p>
+        </footer>
       </main>
     </div>
   )
