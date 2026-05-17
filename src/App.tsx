@@ -3,9 +3,6 @@ import {
   CheckCircle2,
   Calendar,
   Video,
-  ClipboardList,
-  MonitorCheck,
-  BellRing,
   Mail,
   ArrowUpRight,
   Clock,
@@ -19,45 +16,6 @@ import {
   initialsFromName,
   type CalendlyBooking,
 } from './lib/calendly'
-
-type Step = {
-  icon: typeof Calendar
-  title: string
-  body: string
-}
-
-const STEPS: Step[] = [
-  {
-    icon: Calendar,
-    title: 'Zet het gesprek in je agenda',
-    body:
-      'Je ontvangt zo een bevestigingsmail met agenda-uitnodiging van Calendly. Accepteer deze direct, zodat je tijdslot geblokkeerd staat.',
-  },
-  {
-    icon: ClipboardList,
-    title: 'Vul het intake-formulier in',
-    body:
-      'Zo kunnen we het gesprek volledig op jouw situatie afstemmen. Reken op 3 tot 5 minuten. Hoe scherper jouw antwoorden, hoe concreter onze aanpak.',
-  },
-  {
-    icon: Video,
-    title: 'Bekijk de voorbereidingsvideo',
-    body:
-      'In 8 minuten leggen we uit hoe wij beginners helpen hun eigen online store te lanceren en door te groeien naar hun eerste €10K maand. Bekijk deze vóór ons gesprek — zo halen we samen meer uit ons uur.',
-  },
-  {
-    icon: MonitorCheck,
-    title: 'Test je camera, microfoon en verbinding',
-    body:
-      'We bellen via Google Meet. Doe vooraf een korte check op een rustige plek met goede wifi. Zo voorkom je technische ruis tijdens het gesprek.',
-  },
-  {
-    icon: BellRing,
-    title: 'Plan 60 minuten zonder afleiding',
-    body:
-      'Zet je telefoon op stil. Hoe meer ruimte je geeft, hoe scherper jouw plan na afloop is.',
-  },
-]
 
 const FAQ = [
   {
@@ -245,51 +203,6 @@ function App() {
 
         {/* Booking card */}
         <BookingCard booking={booking} />
-
-        {/* Checklist */}
-        <section className="mt-16">
-          <div>
-            <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-primary">
-              Voorbereiding
-            </p>
-            <h2 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">
-              Doe dit nog vóór{' '}
-              <span className="font-serif-italic">ons gesprek</span>
-            </h2>
-            <p className="mt-2 text-sm text-muted-foreground">
-              5 korte stappen — samen ongeveer 15 minuten.
-            </p>
-          </div>
-
-          <ol className="mt-6 space-y-2.5">
-            {STEPS.map((step, i) => {
-              const Icon = step.icon
-              return (
-                <li
-                  key={step.title}
-                  className="group flex gap-4 rounded-xl border border-border bg-card/60 p-5 transition hover:border-primary/40 hover:bg-card"
-                >
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground transition group-hover:bg-primary/15 group-hover:text-primary">
-                    <Icon className="h-4.5 w-4.5" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-[11px] font-semibold tabular-nums uppercase tracking-[0.14em] text-muted-foreground">
-                        Stap {String(i + 1).padStart(2, '0')}
-                      </span>
-                    </div>
-                    <h3 className="mt-1 text-base font-semibold tracking-tight text-foreground">
-                      {step.title}
-                    </h3>
-                    <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
-                      {step.body}
-                    </p>
-                  </div>
-                </li>
-              )
-            })}
-          </ol>
-        </section>
 
         {/* FAQ */}
         <section className="mt-16">
