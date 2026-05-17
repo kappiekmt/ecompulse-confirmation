@@ -43,7 +43,7 @@ const STEPS: Step[] = [
     icon: Video,
     title: 'Bekijk de voorbereidingsvideo',
     body:
-      'In 8 minuten leggen we uit hoe wij coaches naar consistente €10K+ maanden begeleiden. Bekijk deze vóór ons gesprek — zo halen we samen meer uit ons uur.',
+      'In 8 minuten leggen we uit hoe wij beginners helpen hun eigen online store te lanceren en door te groeien naar hun eerste €10K maand. Bekijk deze vóór ons gesprek — zo halen we samen meer uit ons uur.',
   },
   {
     icon: MonitorCheck,
@@ -62,11 +62,11 @@ const STEPS: Step[] = [
 const FAQ = [
   {
     q: 'Wat gebeurt er tijdens het gesprek?',
-    a: 'We brengen je huidige situatie in kaart, bepalen waar je vastloopt en laten zien welk pad jou naar consistente €10K+ maanden brengt. Geen pitch, wel een eerlijk advies.',
+    a: 'We brengen je huidige situatie in kaart, bepalen waar je vastloopt en laten zien welk pad jou naar je eerste €10K maand met je eigen online store brengt. Geen pitch, wel een eerlijk advies.',
   },
   {
     q: 'Met wie spreek ik?',
-    a: 'Je spreekt met één van onze strategen. Zij weten precies waar coaches in jouw fase op vastlopen. Hierboven zie je met wie jij specifiek bent ingepland.',
+    a: 'Je spreekt met één van onze strategen. Zij weten precies waar starters in jouw fase op vastlopen bij het bouwen van hun online store. Hierboven zie je met wie jij specifiek bent ingepland.',
   },
   {
     q: 'Kan ik het gesprek verzetten?',
@@ -228,7 +228,7 @@ function App() {
           </h1>
 
           <p className="mt-6 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
-            Je hebt zojuist een belangrijke stap gezet richting consistente €10K+ maanden als coach.
+            Je hebt zojuist een belangrijke stap gezet richting jouw eerste €10K maand met je eigen online store.
             Hieronder vind je alles wat je nodig hebt om jouw gesprek tot een succes te maken.
           </p>
 
